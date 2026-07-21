@@ -13,7 +13,7 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     steps:
       - name: Check out render branch
         uses: actions/checkout@v4
@@ -24,6 +24,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg fonts-dejavu-core curl
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy pillow yt-dlp
 
       - name: Render live-action S0VRAN film
         run: python3 tools/s0vran-live/render.py
@@ -31,12 +33,14 @@ jobs:
       - name: Upload finished film
         uses: actions/upload-artifact@v4
         with:
-          name: S0VRAN_LIVE_ACTION_V9
+          name: S0VRAN_LIVE_ACTION_V11
           retention-days: 3
           if-no-files-found: error
           path: |
-            out/S0VRAN_LIVE_ACTION_V9_WEB.mp4
-            out/S0VRAN_LIVE_ACTION_V9_MASTER.mp4
-            out/S0VRAN_LIVE_ACTION_V9_POSTER.jpg
+            out/S0VRAN_LIVE_ACTION_V11_WEB.mp4
+            out/S0VRAN_LIVE_ACTION_V11_MASTER.mp4
+            out/S0VRAN_LIVE_ACTION_V11_POSTER.jpg
+            out/S0VRAN_LIVE_ACTION_V11_CONTACT.jpg
+            out/S0VRAN_LIVE_ACTION_V11_SCORE.mp3
             out/CREDITS.txt
             out/SOURCE_MANIFEST.json
