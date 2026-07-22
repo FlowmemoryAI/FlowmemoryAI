@@ -14,4 +14,9 @@ new_amb='''        if not p.exists():\n            last_error = None\n          
 if old_amb not in source:
     raise RuntimeError("Could not patch ambience downloader")
 source=source.replace(old_amb,new_amb,1)
+source=source.replace("volume=.055", "volume=0.055")
+source=source.replace("atrim=0:.45", "atrim=0:0.45")
+source=source.replace("volume=.18", "volume=0.18")
+source=source.replace("d=.05", "d=0.05")
+source=source.replace("d=.3", "d=0.3")
 exec(compile(source,__file__,"exec"))
