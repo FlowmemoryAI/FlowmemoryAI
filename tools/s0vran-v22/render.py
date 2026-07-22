@@ -6,4 +6,5 @@ payload="".join((root/f"p{i}.txt").read_text(encoding="utf-8").strip() for i in 
 source=lzma.decompress(base64.b64decode(payload)).decode("utf-8")
 # FFmpeg 6 rejects shorthand duration values such as d=.035.
 source=source.replace("=.", "=0.")
+# Render revision 3: narrated auction cut.
 exec(compile(source,__file__,"exec"))
