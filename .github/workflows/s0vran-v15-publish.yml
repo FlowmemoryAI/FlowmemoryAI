@@ -1,0 +1,53 @@
+name: Publish S0VRAN V15 Review Assets
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'tools/s0vran-v15-publish/**'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download completed render artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p publish
+          gh run download 29895338902 \
+            --repo "$GITHUB_REPOSITORY" \
+            --name S0VRAN_V15_MYSTIC_FILM \
+            --dir publish
+          find publish -type f -maxdepth 3 -print
+
+      - name: Publish temporary review release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: s0vran-v15-mystic-review
+        run: |
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --cleanup-tag -y || true
+          mapfile -t assets < <(find publish -type f \( \
+            -name 'S0VRAN_BEYOND_THE_VEIL_V15_WEB.mp4' -o \
+            -name 'S0VRAN_BEYOND_THE_VEIL_V15_MASTER.mp4' -o \
+            -name 'S0VRAN_V15_SOUNDTRACK_EDIT.mp3' -o \
+            -name 'S0VRAN_V15_STORY_SCRIPT.md' -o \
+            -name 'S0VRAN_V15_POSTER.jpg' -o \
+            -name 'S0VRAN_V15_CONTACT.jpg' -o \
+            -name 'S0VRAN_V15_CLIMAX_CONTACT.jpg' -o \
+            -name 'CREDITS.txt' -o \
+            -name 'SOURCE_MANIFEST.json' -o \
+            -name 'EDIT_QA.json' \
+          \) -print)
+          test "${#assets[@]}" -ge 8
+          gh release create "$TAG" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "${{ github.event.pull_request.head.sha }}" \
+            --title 'S0VRAN — Beyond the Veil V15 (Review)' \
+            --notes 'Temporary review release for the completed live-action mystic story film.'
