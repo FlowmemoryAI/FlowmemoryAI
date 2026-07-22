@@ -29,4 +29,9 @@ new_scene='''    filt = (f"setpts={1/speed:.8f}*PTS," + color_filter(look, durat
 if old_scene not in source:
     raise RuntimeError("Could not patch exact scene duration")
 source=source.replace(old_scene,new_scene,1)
+old_input='''        "ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(src), "-an",\n'''
+new_input='''        "ffmpeg", "-y", "-stream_loop", "-1", "-ss", f"{start:.3f}", "-i", str(src), "-an",\n'''
+if old_input not in source:
+    raise RuntimeError("Could not patch looping scene input")
+source=source.replace(old_input,new_input,1)
 exec(compile(source,__file__,"exec"))
