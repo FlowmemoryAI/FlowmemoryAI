@@ -1,0 +1,66 @@
+name: S0VRAN V17 Floor Below Render
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'tools/s0vran-v17/**'
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out render branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install render dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-liberation curl
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests numpy scipy librosa soundfile pillow
+
+      - name: Render S0VRAN V17
+        shell: bash
+        run: |
+          mkdir -p out
+          set -o pipefail
+          python3 tools/s0vran-v17/render.py 2>&1 | tee out/runner_v17.log
+
+      - name: Upload render log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: S0VRAN_V17_RENDER_LOG
+          retention-days: 3
+          if-no-files-found: warn
+          path: |
+            out/runner_v17.log
+            out/render_v17.log
+
+      - name: Upload finished film
+        uses: actions/upload-artifact@v4
+        with:
+          name: S0VRAN_V17_THE_FLOOR_BELOW
+          retention-days: 3
+          if-no-files-found: error
+          path: |
+            out/S0VRAN_THE_FLOOR_BELOW_V17_WEB.mp4
+            out/S0VRAN_THE_FLOOR_BELOW_V17_MASTER.mp4
+            out/S0VRAN_V17_SOUNDTRACK_EDIT.mp3
+            out/S0VRAN_V17_POSTER.jpg
+            out/S0VRAN_V17_CONTACT.jpg
+            out/S0VRAN_V17_CLIMAX_CONTACT.jpg
+            out/S0VRAN_V17_STORY_SCRIPT.md
+            out/CREDITS.txt
+            out/SOURCE_MANIFEST.json
+            out/EDIT_QA.json
+            out/runner_v17.log
+            out/render_v17.log
