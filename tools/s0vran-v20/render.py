@@ -24,4 +24,9 @@ new_thumb='''        if p.exists():\n            thumbs.append(Image.open(p).con
 if old_thumb not in source:
     raise RuntimeError("Could not patch contact-sheet fallback")
 source=source.replace(old_thumb,new_thumb,1)
+old_scene='''    filt = f"setpts={1/speed:.8f}*PTS," + color_filter(look, duration, xalign, fade)\n'''
+new_scene='''    filt = (f"setpts={1/speed:.8f}*PTS," + color_filter(look, duration, xalign, fade)\n            + f",tpad=stop_mode=clone:stop_duration={duration:.3f},trim=duration={duration:.3f},setpts=PTS-STARTPTS")\n'''
+if old_scene not in source:
+    raise RuntimeError("Could not patch exact scene duration")
+source=source.replace(old_scene,new_scene,1)
 exec(compile(source,__file__,"exec"))
