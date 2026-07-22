@@ -28,7 +28,7 @@ jobs:
           python3 -m pip install requests beautifulsoup4 pillow numpy scipy librosa soundfile "yt-dlp[default,curl-cffi]"
 
       - name: Render S0VRAN V12
-        run: python3 tools/s0vran-v12/render.py
+        run: python3 tools/s0vran-v12/run.py
 
       - name: Upload render log
         if: always()
