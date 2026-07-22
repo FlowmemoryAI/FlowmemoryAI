@@ -32,7 +32,29 @@ jobs:
         run: |
           mkdir -p out
           set -o pipefail
-          python3 tools/s0vran-v17/render.py 2>&1 | tee out/runner_v17.log
+          python3 - <<'PY'
+          import ast
+          import base64
+          import lzma
+          from pathlib import Path
+
+          loader = Path('tools/s0vran-v17/render.py')
+          module = ast.parse(loader.read_text(encoding='utf-8'))
+          payload = None
+          for node in module.body:
+              if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'P' for t in node.targets):
+                  payload = ast.literal_eval(node.value)
+                  break
+          if not payload:
+              raise RuntimeError('Could not extract S0VRAN V17 payload')
+          source = lzma.decompress(base64.b64decode(payload)).decode('utf-8')
+          old = "scale='iw*(1+0.006*t/{duration:.3f})':'ih*(1+0.006*t/{duration:.3f})',crop={WIDTH}:{HEIGHT}"
+          new = "scale='iw*(1+0.006*t/{duration:.3f})':'ih*(1+0.006*t/{duration:.3f})':eval=frame,crop={WIDTH}:{HEIGHT}"
+          if old not in source:
+              raise RuntimeError('Expected brand-animation pattern was not found')
+          Path('/tmp/render_v17_patched.py').write_text(source.replace(old, new, 1), encoding='utf-8')
+          PY
+          python3 /tmp/render_v17_patched.py 2>&1 | tee out/runner_v17.log
 
       - name: Upload render log
         if: always()
