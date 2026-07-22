@@ -30,6 +30,15 @@ jobs:
       - name: Render S0VRAN V12
         run: python3 tools/s0vran-v12/render.py
 
+      - name: Upload render log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: S0VRAN_V12_RENDER_LOG
+          retention-days: 3
+          if-no-files-found: warn
+          path: out/render.log
+
       - name: Upload render outputs
         uses: actions/upload-artifact@v4
         with:
