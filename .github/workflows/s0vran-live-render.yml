@@ -28,7 +28,21 @@ jobs:
           python3 -m pip install numpy pillow yt-dlp
 
       - name: Render live-action S0VRAN film
-        run: python3 tools/s0vran-live/render.py
+        shell: bash
+        run: |
+          set +e
+          python3 tools/s0vran-live/render.py > render.log 2>&1
+          status=$?
+          tail -n 350 render.log
+          exit $status
+
+      - name: Upload render log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: S0VRAN_LIVE_ACTION_V11_LOG
+          retention-days: 3
+          path: render.log
 
       - name: Upload finished film
         uses: actions/upload-artifact@v4
