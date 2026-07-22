@@ -8,6 +8,13 @@ source=lzma.decompress(base64.b64decode(payload)).decode("utf-8")
 source=source.replace("=.", "=0.")
 source=source.replace("lowpass=f=12800", "lowpass=f=9800")
 source=source.replace("\"lowpass=f='if(lt(t,60),18000,1900)':eval=frame,\"", "\"lowpass=f=18000,\"")
+# Split narration so it can drive side-chain compression and remain in the final mix.
+source=source.replace(
+    'f"[1:a]apad=pad_dur={DURATION},atrim=0:{DURATION}[voice]"',
+    'f"[1:a]apad=pad_dur={DURATION},atrim=0:{DURATION},asplit=2[voice_sc][voice_mix]"'
+)
+source=source.replace('"[music][voice]sidechaincompress=', '"[music][voice_sc]sidechaincompress=')
+source=source.replace('mix_inputs = "[ducked][voice]"', 'mix_inputs = "[ducked][voice_mix]"')
 # Preserve image quality while shortening intermediate render time.
 source=source.replace('"medium"', '"fast"')
 source=source.replace('"slow"', '"medium"')
