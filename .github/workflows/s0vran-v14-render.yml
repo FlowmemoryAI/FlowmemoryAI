@@ -1,0 +1,59 @@
+name: S0VRAN V14 Story Render
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'tools/s0vran-v14/**'
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - name: Check out render branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install render dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-dejavu-core curl
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests numpy scipy librosa soundfile pillow "yt-dlp[default,curl-cffi]"
+
+      - name: Render S0VRAN V14 story film
+        run: python3 tools/s0vran-v14/render.py
+
+      - name: Upload render log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: S0VRAN_V14_RENDER_LOG
+          retention-days: 3
+          if-no-files-found: warn
+          path: out/render_v14.log
+
+      - name: Upload finished film
+        uses: actions/upload-artifact@v4
+        with:
+          name: S0VRAN_V14_STORY_FILM
+          retention-days: 3
+          if-no-files-found: error
+          path: |
+            out/S0VRAN_SECOND_LIFE_V14_WEB.mp4
+            out/S0VRAN_SECOND_LIFE_V14_MASTER.mp4
+            out/S0VRAN_V14_SOUNDTRACK_EDIT.mp3
+            out/S0VRAN_V14_POSTER.jpg
+            out/S0VRAN_V14_CONTACT.jpg
+            out/S0VRAN_V14_CLIMAX_CONTACT.jpg
+            out/S0VRAN_V14_STORY_SCRIPT.md
+            out/CREDITS.txt
+            out/SOURCE_MANIFEST.json
+            out/EDIT_QA.json
+            out/render_v14.log
