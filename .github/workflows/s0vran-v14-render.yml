@@ -28,7 +28,11 @@ jobs:
           python3 -m pip install requests numpy scipy librosa soundfile pillow "yt-dlp[default,curl-cffi]"
 
       - name: Render S0VRAN V14 story film
-        run: python3 tools/s0vran-v14/render.py
+        shell: bash
+        run: |
+          mkdir -p out
+          set -o pipefail
+          python3 tools/s0vran-v14/render.py 2>&1 | tee out/runner.log
 
       - name: Upload render log
         if: always()
@@ -37,7 +41,9 @@ jobs:
           name: S0VRAN_V14_RENDER_LOG
           retention-days: 3
           if-no-files-found: warn
-          path: out/render_v14.log
+          path: |
+            out/runner.log
+            out/render_v14.log
 
       - name: Upload finished film
         uses: actions/upload-artifact@v4
@@ -56,4 +62,5 @@ jobs:
             out/CREDITS.txt
             out/SOURCE_MANIFEST.json
             out/EDIT_QA.json
+            out/runner.log
             out/render_v14.log
