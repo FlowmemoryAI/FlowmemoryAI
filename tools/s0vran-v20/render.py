@@ -19,4 +19,9 @@ source=source.replace("atrim=0:.45", "atrim=0:0.45")
 source=source.replace("volume=.18", "volume=0.18")
 source=source.replace("d=.", "d=0.")
 source=source.replace("end-.05", "end-0.40")
+old_thumb='''        thumbs.append(Image.open(p).convert("RGB"))\n'''
+new_thumb='''        if p.exists():\n            thumbs.append(Image.open(p).convert("RGB"))\n        elif thumbs:\n            thumbs.append(thumbs[-1].copy())\n        else:\n            thumbs.append(Image.new("RGB", (480, 270), "black"))\n'''
+if old_thumb not in source:
+    raise RuntimeError("Could not patch contact-sheet fallback")
+source=source.replace(old_thumb,new_thumb,1)
 exec(compile(source,__file__,"exec"))
