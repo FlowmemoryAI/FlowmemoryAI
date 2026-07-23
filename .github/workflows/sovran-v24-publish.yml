@@ -1,0 +1,67 @@
+name: Publish SOVRAN V24 Review Assets
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'tools/sovran-v24-publish/**'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: sovran-v24-publish-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: '30017531316'
+      ARTIFACT_NAME: SOVRAN_V24_ZERO_HOUR
+      RELEASE_TAG: sovran-v24-zero-hour-review
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Download finished render artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p delivery
+          gh run download "$SOURCE_RUN" -n "$ARTIFACT_NAME" -D delivery
+          find delivery -type f -maxdepth 3 -print
+
+      - name: Build complete delivery ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(find delivery -type f -print0)
+          test "${#files[@]}" -gt 0
+          zip -j -9 SOVRAN_V24_ZERO_HOUR_DELIVERY.zip "${files[@]}"
+
+      - name: Publish temporary review release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release delete "$RELEASE_TAG" -y || true
+          mapfile -d '' files < <(find delivery -type f -print0)
+          gh release create "$RELEASE_TAG" "${files[@]}" SOVRAN_V24_ZERO_HOUR_DELIVERY.zip \
+            --title "SOVRAN — Zero Hour (V24 Review)" \
+            --notes "Temporary review release for the completed SOVRAN Zero Hour trailer. Includes the web cut, master, new male narration, full mix, score edit, scripts, QA, source manifest, poster, and contact sheets." \
+            --prerelease
+
+      - name: Upload publication audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: SOVRAN_V24_PUBLISH_AUDIT
+          retention-days: 3
+          path: |
+            SOVRAN_V24_ZERO_HOUR_DELIVERY.zip
+            delivery/**
