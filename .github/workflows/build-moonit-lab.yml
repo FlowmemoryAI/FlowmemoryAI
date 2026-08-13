@@ -1,0 +1,35 @@
+name: Build Moonit Rounded Design Lab
+
+on:
+  push:
+    branches:
+      - moonit-rounded-design-lab
+    paths:
+      - 'moonit-rounded-design-lab/part-*.txt'
+      - '.github/workflows/build-moonit-lab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out design branch
+        uses: actions/checkout@v4
+        with:
+          ref: moonit-rounded-design-lab
+
+      - name: Assemble the self-contained preview
+        run: cat moonit-rounded-design-lab/part-{1,2,3,4,5}.txt > moonit-rounded-design-lab/full.html
+
+      - name: Commit assembled preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add moonit-rounded-design-lab/full.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Build self-contained Moonit rounded design preview"
+            git push origin HEAD:moonit-rounded-design-lab
+          fi
